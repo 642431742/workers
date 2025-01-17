@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>周末倒计时</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f2f5;
+      }
+      .music {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        z-index: 100;
+        cursor: pointer;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.3s ease;
+      }
+
+      .music.playing {
+        animation: rotate 5s linear infinite;
+      }
+
+      .music img {
+        width: 24px;
+        height: 24px;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* 隐藏原生音频控件 */
+      audio {
+        display: none;
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 600px;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 2rem;
+        font-size: clamp(1.5rem, 5vw, 2rem);
+      }
+      .countdown {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .time-block {
+        background-color: #1890ff;
+        color: white;
+        padding: clamp(0.5rem, 3vw, 1rem);
+        border-radius: 5px;
+        min-width: clamp(80px, 20vw, 100px);
+        flex: 1;
+      }
+      .number {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: bold;
+      }
+      .label {
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+        margin-top: 0.5rem;
+      }
+
+      /* 移动端适配 */
+      @media screen and (max-width: 480px) {
+        .container {
+          padding: 1rem;
+        }
+        .countdown {
+          gap: 0.5rem;
+        }
+        .time-block {
+          padding: 0.5rem;
+        }
+      }
+
+      /* 添加摸鱼计数器样式 */
+      .fish-counter {
+        margin-top: 2rem;
+        cursor: pointer;
+        user-select: none;
+      }
+      .fish-icon {
+        font-size: 2rem;
+        transition: transform 0.2s;
+      }
+      .fish-icon:hover {
+        transform: scale(1.1);
+      }
+      .fish-count {
+        font-size: 1.2rem;
+        color: #666;
+        margin-top: 0.5rem;
+      }
+
+      /* 修改提示框样式 */
+      .toast {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(0);
+        background-color: #fff;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        opacity: 0;
+        transition: all 0.25s ease;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 320px;
+        border-left: 4px solid #67c23a;
+      }
+      .toast::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z' fill='%2367C23A'/%3E%3C/path%3E%3C/svg%3E");
+        background-size: cover;
+        flex-shrink: 0;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.hide {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-50px);
+      }
+
+      /* 不同类型的提示样式 */
+      .toast.success {
+        border-left-color: #67c23a;
+        color: #67c23a;
+      }
+      .toast.success::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z' fill='%2367C23A'/%3E%3C/path%3E%3C/svg%3E");
+      }
+      .toast.info {
+        border-left-color: #909399;
+        color: #909399;
+      }
+      .toast.info::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344c-26.5 0-48-21.5-48-48s21.5-48 48-48 48 21.5 48 48-21.5 48-48 48z' fill='%23909399'/%3E%3C/path%3E%3C/svg%3E");
+      }
+      .toast.warning {
+        border-left-color: #e6a23c;
+        color: #e6a23c;
+      }
+      .toast.warning::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm-32 232c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V296zm32 440c-26.5 0-48-21.5-48-48s21.5-48 48-48 48 21.5 48 48-21.5 48-48 48z' fill='%23E6A23C'/%3E%3C/path%3E%3C/svg%3E");
+      }
+      .toast.error {
+        border-left-color: #f56c6c;
+        color: #f56c6c;
+      }
+      .toast.error::before {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm165.4 618.2l-66-.3L512 563.4l-99.3 118.4-66.1.3c-4.4 0-8-3.5-8-8 0-1.9.7-3.7 1.9-5.2l130.1-155L340.5 359c-1.2-1.5-1.9-3.3-1.9-5.2 0-4.4 3.6-8 8-8l66.1.3L512 464.6l99.3-118.4 66-.3c4.4 0 8 3.5 8 8 0 1.9-.7 3.7-1.9 5.2L553.5 514l130 155c1.2 1.5 1.9 3.3 1.9 5.2 0 4.4-3.6 8-8 8z' fill='%23F56C6C'/%3E%3C/path%3E%3C/svg%3E");
+      }
+
+      /* 添加烟花样式 */
+      .fireworks {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      .message {
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px 40px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        font-size: 2rem;
+        color: #333;
+        z-index: 1001;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="music" id="musicControl">
+      <img
+        src="data:image/svg+xml,%3Csvg t='1710400611654' class='icon' viewBox='0 0 1024 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='4126'%3E%3Cpath d='M512 42.666667C252.793333 42.666667 42.666667 252.793333 42.666667 512s210.126667 469.333333 469.333333 469.333333 469.333333-210.126667 469.333333-469.333333S771.206667 42.666667 512 42.666667z m0 853.333333C276.352 896 85.333333 704.981333 85.333333 469.333333S276.352 42.666667 512 42.666667s426.666667 191.018667 426.666667 426.666666-191.018667 426.666667-426.666667 426.666667z' fill='%231890ff' p-id='4127'%3E%3C/path%3E%3Cpath d='M672 469.333333c0-42.397867-25.856-78.848-62.634667-94.549333L609.365333 160c0-11.776-9.557333-21.333333-21.333333-21.333333s-21.333333 9.557333-21.333333 21.333333l0.042666 214.784C530.261333 390.485333 504.448 426.935467 504.448 469.333333c0 47.146667 38.186667 85.333333 85.333333 85.333334s85.333333-38.186667 85.333334-85.333334h-3.114667z m-82.218667 42.666667c-23.573333 0-42.666667-19.093333-42.666666-42.666667 0-23.573333 19.093333-42.666667 42.666666-42.666666 23.573333 0 42.666667 19.093333 42.666667 42.666666 0 23.573333-19.093333 42.666667-42.666667 42.666667z' fill='%231890ff' p-id='4128'%3E%3C/path%3E%3C/svg%3E"
+        alt="music"
+        id="musicIcon"
+      />
+      <audio id="bgMusic" loop autoplay>
+        <source src="./music.mp3" type="audio/mpeg" />
+      </audio>
+    </div>
+    <div class="container">
+      <h1>距离周末还有</h1>
+      <div class="countdown">
+        <div class="time-block">
+          <div class="number" id="days">0</div>
+          <div class="label">天</div>
+        </div>
+        <div class="time-block">
+          <div class="number" id="hours">0</div>
+          <div class="label">小时</div>
+        </div>
+        <div class="time-block">
+          <div class="number" id="minutes">0</div>
+          <div class="label">分钟</div>
+        </div>
+        <div class="time-block">
+          <div class="number" id="seconds">0</div>
+          <div class="label">秒</div>
+        </div>
+      </div>
+
+      <!-- 添加摸鱼计数器 -->
+      <div class="fish-counter" id="fishCounter">
+        <div class="fish-icon">🐟</div>
+        <div class="fish-count">
+          今日摸鱼次数：<span id="fishCount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加提示框 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 添加烟花容器和祝福消息 -->
+    <div class="fireworks" id="fireworks"></div>
+    <div class="message" id="message">祝你周末愉快！</div>
+
+    <script>
+      function updateCountdown() {
+        const now = new Date();
+        const currentDay = now.getDay(); // 0是周日，6是周六
+
+        // 计算距离下个周六的时间
+        const daysUntilWeekend = (6 - currentDay + 7) % 7;
+        const weekend = new Date(now);
+        weekend.setDate(now.getDate() + daysUntilWeekend);
+        weekend.setHours(0, 0, 0, 0);
+
+        const timeLeft = weekend.getTime() - now.getTime();
+
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        document.getElementById("days").textContent = days;
+        document.getElementById("hours").textContent = hours;
+        document.getElementById("minutes").textContent = minutes;
+        document.getElementById("seconds").textContent = seconds;
+
+        // 检查是否为周末（周六或周日）
+        const isWeekend = currentDay === 0 || currentDay === 6;
+        const musicControl = document.getElementById("musicControl");
+        const bgMusic = document.getElementById("bgMusic");
+
+        if (isWeekend) {
+          // 如果是周末，隐藏音乐控件并停止播放
+          musicControl.style.display = "none";
+          bgMusic.pause();
+
+          // 显示祝福消息和烟花效果
+          document.getElementById("message").style.display = "block";
+          launchFireworks();
+        } else {
+          // 如果不是周末，显示音乐控件
+          musicControl.style.display = "flex";
+          document.getElementById("message").style.display = "none";
+        }
+      }
+
+      // 每秒更新一次倒计时
+      const timerInterval = setInterval(updateCountdown, 1000);
+      updateCountdown(); // 立即执行一次
+
+      // 添加摸鱼计数功能
+      let fishCount = parseInt(localStorage.getItem("fishCount") || "0");
+      const fishCountElement = document.getElementById("fishCount");
+      const fishCounter = document.getElementById("fishCounter");
+      const toast = document.getElementById("toast");
+
+      // 更新显示的计数
+      fishCountElement.textContent = fishCount;
+
+      // 修改检查日期重置的逻辑
+      function checkAndResetCount() {
+        const now = new Date();
+        const lastDate = localStorage.getItem("lastFishDate");
+        const today = now.toDateString();
+
+        // 如果是新的一天，重置计数
+        if (lastDate !== today) {
+          fishCount = 0;
+          fishCountElement.textContent = "0";
+          localStorage.setItem("lastFishDate", today);
+          localStorage.setItem("fishCount", "0");
+          showToast("新的一天开始了，加油！", "info");
+        }
+      }
+
+      // 在页面加载时检查是否需要重置
+      document.addEventListener("DOMContentLoaded", checkAndResetCount);
+
+      // 提示框功能
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+
+        // 如果已有提示在显示，先移除它
+        if (toast.classList.contains("show")) {
+          toast.classList.remove("show");
+          clearTimeout(toast.showTimeout);
+          clearTimeout(toast.hideTimeout);
+        }
+
+        // 移除所有类型类名
+        toast.classList.remove("success", "info", "warning", "error", "hide");
+
+        // 添加新的类型
+        toast.classList.add(type);
+
+        // 强制重绘
+        void toast.offsetWidth;
+
+        // 显示提示
+        toast.classList.add("show");
+
+        // 设置定时器
+        toast.showTimeout = setTimeout(() => {
+          toast.classList.add("hide");
+        }, 3000);
+
+        toast.hideTimeout = setTimeout(() => {
+          toast.classList.remove("show", "hide", type);
+        }, 3300);
+      }
+
+      // 修改点击事件的提示调用
+      fishCounter.addEventListener("click", () => {
+        fishCount++;
+        fishCountElement.textContent = fishCount;
+        localStorage.setItem("fishCount", fishCount.toString());
+
+        // 显示提示
+        showToast("摸鱼次数 +1", "success");
+      });
+
+      // 添加烟花效果函数
+      function launchFireworks() {
+        const fireworksContainer = document.getElementById("fireworks");
+        // 简单的烟花效果示例，可以使用Canvas或外部库实现更复杂的效果
+        // 这里仅添加简单的动画示例
+        fireworksContainer.innerHTML = `
+          <canvas id="fireworkCanvas"></canvas>
+        `;
+
+        const canvas = document.getElementById("fireworkCanvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+
+        // 烟花动画逻辑...
+        // 这里可以插入烟花动画代码，或引用外部库
+        // 由于复杂性，这里提供一个简单的动画示例
+
+        let particles = [];
+        const colors = [
+          "#ff5252",
+          "#ff4081",
+          "#e040fb",
+          "#7c4dff",
+          "#536dfe",
+          "#448aff",
+          "#40c4ff",
+          "#18ffff",
+          "#64ffda",
+          "#69f0ae",
+          "#b2ff59",
+          "#eeff41",
+          "#ffff00",
+          "#ffd740",
+        ];
+
+        function createFirework(x, y) {
+          const particleCount = 100;
+          for (let i = 0; i < particleCount; i++) {
+            particles.push({
+              x: x,
+              y: y,
+              speed: Math.random() * 5 + 2,
+              direction: Math.random() * 2 * Math.PI,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              alpha: 1,
+              size: Math.random() * 3 + 1,
+            });
+          }
+        }
+
+        createFirework(canvas.width / 2, canvas.height / 2);
+
+        function animate() {
+          ctx.globalAlpha = 0.2;
+          ctx.fillStyle = "#000";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+
+          particles.forEach((p, index) => {
+            p.x += Math.cos(p.direction) * p.speed;
+            p.y += Math.sin(p.direction) * p.speed;
+            p.alpha -= 0.01;
+            if (p.alpha <= 0) {
+              particles.splice(index, 1);
+            } else {
+              ctx.fillStyle = p.color;
+              ctx.globalAlpha = p.alpha;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+              ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+          });
+
+          if (particles.length > 0) {
+            requestAnimationFrame(animate);
+          }
+        }
+
+        animate();
+
+        // 5秒后移除烟花效果
+        setTimeout(() => {
+          fireworksContainer.innerHTML = "";
+        }, 5000);
+      }
+
+      // 添加音乐控制相关代码
+      const musicControl = document.getElementById("musicControl");
+      const bgMusic = document.getElementById("bgMusic");
+      const musicIcon = document.getElementById("musicIcon");
+
+      // 设置初始状态
+      let isPlaying = true;
+
+      // 页面加载完成后自动添加旋转动画
+      document.addEventListener("DOMContentLoaded", () => {
+        musicControl.classList.add("playing");
+      });
+
+      // 点击事件处理
+      musicControl.addEventListener("click", () => {
+        if (isPlaying) {
+          bgMusic.pause();
+          musicControl.classList.remove("playing");
+          musicIcon.src =
+            "data:image/svg+xml,%3Csvg t='1710400611654' class='icon' viewBox='0 0 1024 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='4126'%3E%3Cpath d='M512 42.666667C252.793333 42.666667 42.666667 252.793333 42.666667 512s210.126667 469.333333 469.333333 469.333333 469.333333-210.126667 469.333333-469.333333S771.206667 42.666667 512 42.666667z m0 853.333333C276.352 896 85.333333 704.981333 85.333333 469.333333S276.352 42.666667 512 42.666667s426.666667 191.018667 426.666667 426.666666-191.018667 426.666667-426.666667 426.666667z' fill='%231890ff' p-id='4127'%3E%3C/path%3E%3Cpath d='M672 469.333333c0-42.397867-25.856-78.848-62.634667-94.549333L609.365333 160c0-11.776-9.557333-21.333333-21.333333-21.333333s-21.333333 9.557333-21.333333 21.333333l0.042666 214.784C530.261333 390.485333 504.448 426.935467 504.448 469.333333c0 47.146667 38.186667 85.333333 85.333333 85.333334s85.333333-38.186667 85.333334-85.333334h-3.114667z m-82.218667 42.666667c-23.573333 0-42.666667-19.093333-42.666666-42.666667 0-23.573333 19.093333-42.666667 42.666666-42.666666 23.573333 0 42.666667 19.093333 42.666667 42.666666 0 23.573333-19.093333 42.666667-42.666667 42.666667z' fill='%231890ff' p-id='4128'%3E%3C/path%3E%3C/svg%3E";
+        } else {
+          bgMusic.play();
+          musicControl.classList.add("playing");
+          musicIcon.src =
+            "data:image/svg+xml,%3Csvg t='1710400611654' class='icon' viewBox='0 0 1024 1024' version='1.1' xmlns='http://www.w3.org/2000/svg' p-id='4126'%3E%3Cpath d='M512 42.666667C252.793333 42.666667 42.666667 252.793333 42.666667 512s210.126667 469.333333 469.333333 469.333333 469.333333-210.126667 469.333333-469.333333S771.206667 42.666667 512 42.666667z m0 853.333333C276.352 896 85.333333 704.981333 85.333333 469.333333S276.352 42.666667 512 42.666667s426.666667 191.018667 426.666667 426.666666-191.018667 426.666667-426.666667 426.666667z' fill='%231890ff' p-id='4127'%3E%3C/path%3E%3Cpath d='M672 469.333333c0-42.397867-25.856-78.848-62.634667-94.549333L609.365333 160c0-11.776-9.557333-21.333333-21.333333-21.333333s-21.333333 9.557333-21.333333 21.333333l0.042666 214.784C530.261333 390.485333 504.448 426.935467 504.448 469.333333c0 47.146667 38.186667 85.333333 85.333333 85.333334s85.333333-38.186667 85.333334-85.333334h-3.114667z m-82.218667 42.666667c-23.573333 0-42.666667-19.093333-42.666666-42.666667 0-23.573333 19.093333-42.666667 42.666666-42.666666 23.573333 0 42.666667 19.093333 42.666667 42.666666 0 23.573333-19.093333 42.666667-42.666667 42.666667z' fill='%231890ff' p-id='4128'%3E%3C/path%3E%3C/svg%3E";
+        }
+        isPlaying = !isPlaying;
+      });
+
+      // 监听音乐播放状态
+      bgMusic.addEventListener("play", () => {
+        musicControl.classList.add("playing");
+        isPlaying = true;
+      });
+
+      bgMusic.addEventListener("pause", () => {
+        musicControl.classList.remove("playing");
+        isPlaying = false;
+      });
+    </script>
+  </body>
+</html>

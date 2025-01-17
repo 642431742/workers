@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工资倒计时</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #00b4db, #0083b0);
+        color: #fff;
+        padding: 20px;
+      }
+
+      .container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 2.5rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        margin-top: 2rem;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.5s ease;
+      }
+
+      /* 发薪日标题样式 */
+      h1.payday {
+        background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 2rem;
+        text-shadow: none;
+        animation: titleGlow 2s infinite;
+      }
+
+      @keyframes titleGlow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6));
+        }
+        50% {
+          filter: drop-shadow(0 0 12px rgba(255, 217, 61, 0.8));
+        }
+      }
+
+      .countdown {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .countdown-item {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1.2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      /* 添加新的样式用于隐藏元素 */
+      .countdown-item.hidden {
+        display: none;
+      }
+
+      .countdown-item:hover {
+        transform: translateY(-5px);
+      }
+
+      .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .label {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+      }
+
+      .settings {
+        margin-top: 2.5rem;
+      }
+
+      input {
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        margin: 0.5rem;
+        width: 150px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+      }
+
+      input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+      }
+
+      button {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        background: #fff;
+        color: #0083b0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+
+      button:hover {
+        background: #f0f0f0;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .message {
+        margin-top: 2.5rem;
+        font-size: 1.3rem;
+        font-style: italic;
+        line-height: 1.6;
+        padding: 1rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        transition: opacity 0.3s ease;
+      }
+
+      /* 发工资当天的消息样式 */
+      .message.payday {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      /* 添加鼠标悬停效果 */
+      .message.payday:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      /* 发工资当天的"0天"样式 */
+      .countdown-item.payday {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 2rem 4rem;
+        grid-column: 1 / -1;
+        max-width: 200px;
+        margin: 0 auto;
+        animation: pulse 2s infinite;
+      }
+
+      .countdown-item.payday .number {
+        font-size: 3.5rem;
+        color: #fff;
+        text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .countdown-item.payday .label {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .countdown {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        h1 {
+          font-size: 1.5rem;
+        }
+
+        .number {
+          font-size: 2rem;
+        }
+
+        .message {
+          font-size: 1.1rem;
+        }
+
+        h1.payday {
+          font-size: 1.6rem;
+        }
+      }
+
+      /* 添加烟花画布样式 */
+      #fireworks {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="fireworks"></canvas>
+    <div class="container">
+      <h1>距离发工资还有</h1>
+      <div class="countdown">
+        <div class="countdown-item">
+          <div class="number" id="days">0</div>
+          <div class="label">天</div>
+        </div>
+        <div class="countdown-item">
+          <div class="number" id="hours">0</div>
+          <div class="label">时</div>
+        </div>
+        <div class="countdown-item">
+          <div class="number" id="minutes">0</div>
+          <div class="label">分</div>
+        </div>
+        <div class="countdown-item">
+          <div class="number" id="seconds">0</div>
+          <div class="label">秒</div>
+        </div>
+      </div>
+      <div class="settings">
+        <input
+          type="number"
+          id="salaryDay"
+          min="1"
+          max="31"
+          placeholder="发薪日"
+        />
+        <button onclick="updateSalaryDay()">保存设置</button>
+      </div>
+      <div class="message" id="message"></div>
+    </div>
+
+    <script>
+      const messages = [
+        "发完工资后，嚣张一星期，将就一星期，节约一星期。期待一星期，一个月就这样完了。",
+        "今天发工资了，我用手指沾了点口水，钱都数完了，口水还没干。",
+        "原来是发工资了啊，我还以为买了什么东西退款到账了。",
+        "我希望发工资的时候，能让我有一种我配不上这么高工资的羞愧感。",
+        "发工资啦！本想奢侈一把，结果一看余额，嗯，还是泡面最懂我。",
+        "我领的岂止是薪水，更是生活的盐巴，虽不多，却能让日子有滋有味。",
+        "以我现在的工资，那远山呼唤我，我只能装听不见。",
+        "我的生活很简单：随薪锁欲，薪尽自然凉。",
+        "我的工资组成如下：忍气吞声费、精神损失费、窝囊废、熬夜所得费、配合表演费、准时到场费、骂不还口费。",
+        "上班还能领点窝囊费，不上班就只是窝囊废了。",
+        "很喜欢发工资，有种领低保的感觉。",
+        "根本不用焦虑，因为条条大路当牛马。",
+        "嘿, 亲爱的, 薪水已至, 是不是感觉生活都甜了几分",
+        "原来你也爱谈钱途, 如今却让工资滋养了生活情趣",
+        "这份薪资, 不仅是生活的糖, 更是梦想的帆, 带着我们优雅地航行",
+        "它悄然而至, 如同每月的约定, 虽短暂却满载喜悦",
+      ];
+
+      // 添加变量存储当天的随机话术
+      let todayMessage = "";
+      let lastCheckDate = "";
+
+      // 从本地存储获取发薪日
+      let salaryDay = localStorage.getItem("salaryDay") || 15;
+      document.getElementById("salaryDay").value = salaryDay;
+
+      function updateSalaryDay() {
+        const newDay = document.getElementById("salaryDay").value;
+        if (newDay >= 1 && newDay <= 31) {
+          salaryDay = newDay;
+          localStorage.setItem("salaryDay", salaryDay);
+          updateCountdown();
+        }
+      }
+
+      function getNextSalaryDate() {
+        const now = new Date();
+        let nextSalaryDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          salaryDay
+        );
+
+        if (now > nextSalaryDate) {
+          nextSalaryDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            salaryDay
+          );
+        }
+
+        return nextSalaryDate;
+      }
+
+      const canvas = document.getElementById("fireworks");
+      const ctx = canvas.getContext("2d");
+      let isPayday = false;
+
+      // 调整画布大小
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      // 烟花粒子类
+      class Particle {
+        constructor(x, y, color) {
+          this.x = x;
+          this.y = y;
+          this.color = color;
+          this.velocity = {
+            x: (Math.random() - 0.5) * 8,
+            y: (Math.random() - 0.5) * 8,
+          };
+          this.alpha = 1;
+          this.friction = 0.95;
+          this.gravity = 0.2;
+        }
+
+        draw() {
+          ctx.save();
+          ctx.globalAlpha = this.alpha;
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        update() {
+          this.velocity.x *= this.friction;
+          this.velocity.y *= this.friction;
+          this.velocity.y += this.gravity;
+          this.x += this.velocity.x;
+          this.y += this.velocity.y;
+          this.alpha -= 0.01;
+        }
+      }
+
+      // 创建烟花
+      function createFirework(x, y) {
+        const colors = ["#ff0", "#ff3", "#f62", "#f24", "#f6f"];
+        const particles = [];
+        const particleCount = 100;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle(x, y, color));
+        }
+        return particles;
+      }
+
+      let fireworks = [];
+
+      // 动画循环
+      function animate() {
+        if (!isPayday) return;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 随机创建新烟花
+        if (Math.random() < 0.05) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height * 0.5;
+          fireworks = fireworks.concat(createFirework(x, y));
+        }
+
+        // 更新和绘制所有烟花粒子
+        fireworks = fireworks.filter((particle) => {
+          particle.update();
+          particle.draw();
+          return particle.alpha > 0;
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      function updateCountdown() {
+        const now = new Date();
+        const nextSalaryDate = getNextSalaryDate();
+        const diff = nextSalaryDate - now;
+
+        // 获取标题元素
+        const titleElement = document.querySelector("h1");
+
+        // 获取所有倒计时项
+        const countdownElement = document.querySelector(".countdown");
+        const daysItem = document.querySelector(".countdown-item:nth-child(1)");
+        const hoursItem = document.querySelector(
+          ".countdown-item:nth-child(2)"
+        );
+        const minutesItem = document.querySelector(
+          ".countdown-item:nth-child(3)"
+        );
+        const secondsItem = document.querySelector(
+          ".countdown-item:nth-child(4)"
+        );
+        const messageElement = document.getElementById("message");
+
+        // 检查是否需要重新生成随机消息（只在日期变化且消息为空时生成）
+        const today =
+          now.getDate() + "-" + now.getMonth() + "-" + now.getFullYear();
+        if (today !== lastCheckDate) {
+          lastCheckDate = today;
+          if (!messageElement.textContent) {
+            todayMessage =
+              messages[Math.floor(Math.random() * messages.length)];
+          }
+        }
+
+        // 发工资当天的显示逻辑
+        if (now.getDate() === parseInt(salaryDay)) {
+          // 修改标题
+          titleElement.textContent = "恭喜！今天发工资啦";
+          titleElement.classList.add("payday");
+
+          // 启动烟花效果
+          if (!isPayday) {
+            isPayday = true;
+            animate();
+          }
+
+          // 隐藏整个倒计时区域
+          countdownElement.style.display = "none";
+
+          // 显示消息并添加样式
+          if (!messageElement.textContent) {
+            messageElement.textContent = todayMessage;
+          }
+          messageElement.classList.add("payday");
+
+          // 添加点击事件（如果还没有添加过）
+          if (!messageElement.hasClickListener) {
+            messageElement.style.cursor = "pointer";
+            messageElement.addEventListener("click", function () {
+              // 获取一个不同的随机消息
+              let newMessage;
+              do {
+                newMessage =
+                  messages[Math.floor(Math.random() * messages.length)];
+              } while (newMessage === messageElement.textContent);
+
+              // 添加淡出淡入效果
+              messageElement.style.opacity = "0";
+              setTimeout(() => {
+                messageElement.textContent = newMessage;
+                todayMessage = newMessage; // 更新 todayMessage
+                messageElement.style.opacity = "1";
+              }, 300);
+            });
+            messageElement.hasClickListener = true;
+          }
+          return;
+        } else {
+          // 恢复原标题和显示
+          titleElement.textContent = "距离发工资还有";
+          titleElement.classList.remove("payday");
+          countdownElement.style.display = "grid";
+          isPayday = false;
+
+          // 清除画布
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          fireworks = [];
+
+          // 恢复倒计时显示
+          messageElement.textContent = "";
+          messageElement.classList.remove("payday");
+        }
+
+        // 更新倒计时数字
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById("days").textContent = days;
+        document.getElementById("hours").textContent = hours;
+        document.getElementById("minutes").textContent = minutes;
+        document.getElementById("seconds").textContent = seconds;
+      }
+
+      // 每秒更新倒计时
+      setInterval(updateCountdown, 1000);
+      updateCountdown();
+    </script>
+  </body>
+</html>

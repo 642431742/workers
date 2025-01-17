@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>劳动法规 - 打工人助手</title>
+    <style>
+      :root {
+        --primary-color: #1890ff;
+        --text-color: #333;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        background-color: #f8f9fa;
+        color: var(--text-color);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      header {
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        color: white;
+        padding: 10px;
+        text-align: center;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      header h1 {
+        font-size: 1.3em;
+        margin: 0;
+      }
+
+      .back-button {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+      }
+
+      .law-section {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow);
+      }
+
+      .law-section h2 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .law-section p {
+        margin-bottom: 10px;
+        color: #666;
+      }
+
+      footer {
+        text-align: center;
+        padding: 10px;
+        color: #666;
+        border-top: 1px solid #eee;
+        background: white;
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html" class="back-button">←</a>
+      <h1>劳动法规</h1>
+    </header>
+
+    <div class="container">
+      <div class="law-section">
+        <h2>工作时间规定</h2>
+        <p>• 标准工作时间：每日工作8小时，每周工作40小时</p>
+        <p>• 加班时间：每日不超过3小时，每月不超过36小时</p>
+        <p>• 休息日：每周至少休息1天</p>
+      </div>
+
+      <div class="law-section">
+        <h2>工资待遇</h2>
+        <p>• 最低工资标准：按所在地区规定执行</p>
+        <p>• 加班工资：工作日加班1.5倍，休息日加班2倍，法定节假日3倍</p>
+        <p>• 发薪时间：每月至少发放一次</p>
+      </div>
+
+      <div class="law-section">
+        <h2>休假制度</h2>
+        <p>• 法定节假日：元旦、春节、清明节、劳动节、端午节、中秋节、国庆节</p>
+        <p>• 带薪年假：工作满1年，根据工作年限享受5-15天带薪年假</p>
+        <p>• 病假：按医疗期规定，享受相应的病假工资</p>
+      </div>
+
+      <div class="law-section">
+        <h2>社会保险</h2>
+        <p>
+          •
+          五险一金：养老保险、医疗保险、失业保险、工伤保险、生育保险和住房公积金
+        </p>
+        <p>• 缴费基数：按实际工资收入确定，有上下限</p>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2024 打工人助手 - 为打工人服务</p>
+    </footer>
+  </body>
+</html>
